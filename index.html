@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>teknogish | ثبت‌نام و ورود</title>
+  <style>
+    body { font-family: sans-serif; direction: rtl; padding: 30px; background: #f5f5f5; }
+    .box { background: white; padding: 20px; max-width: 400px; margin: auto; border-radius: 10px; box-shadow: 0 2px 5px #ccc; }
+    input { width: 90%; padding: 10px; margin: 10px auto; display: block; border-radius: 5px; }
+    button { padding: 10px 20px; background: #25D366; color: white; border: none; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>ثبت‌نام</h2>
+    <input id="name" placeholder="نام">
+    <input id="email" placeholder="ایمیل">
+    <input id="password" placeholder="رمز عبور">
+    <button onclick="register()">ثبت‌نام</button>
+  </div>
+
+  <div class="box" style="margin-top:40px;">
+    <h2>ورود</h2>
+    <input id="lemail" placeholder="ایمیل">
+    <input id="lpassword" placeholder="رمز عبور">
+    <button onclick="login()">ورود</button>
+  </div>
+
+  <script>
+    async function register() {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.value,
+          email: email.value,
+          password: password.value
+        })
+      });
+      const data = await res.json();
+      alert(data.message || data.error);
+    }
+
+    async function login() {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: lemail.value,
+          password: lpassword.value
+        })
+      });
+      const data = await res.json();
+      alert(data.message || data.error);
+    }
+  </script>
+</body>
+</html>
