@@ -1,0 +1,18 @@
+<script>
+  const registerForm = document.getElementById('registerForm');
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = registerForm.name.value;
+    const email = registerForm.email.value;
+    const password = registerForm.password.value;
+
+    const res = await fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+
+    const data = await res.json();
+    alert(data.message || data.error);
+  });
+</script>
