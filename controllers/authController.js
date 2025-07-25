@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -8,24 +8,21 @@ exports.register = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashed });
 
-    // EmailJS via nodemailer
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'your_email@gmail.com',
-        pass: 'your_gmail_app_password'
-      }
-    });
-
-    await transporter.sendMail({
-      from: 'teknogish',
-      to: email,
-      subject: 'خوش آمدید به teknogish',
-      text: `سلام ${name}، ثبت‌نام شما با موفقیت انجام شد.`
+    // ارسال ایمیل با EmailJS
+    await axios.post('https://api.emailjs.com/api/v1.0/email/send', {
+      service_id: 'service_k2787c8',
+      template_id: 'template_eyrr8ou',
+      user_id: 'HxrJTFWRj9Hsyez-fytAw',
+      template_params: {
+        to_name: name,
+        to_email: email,
+        message: `سلام ${name}، ثبت‌نام شما با موفقیت انجام شد.`,
+      },
     });
 
     res.json({ message: 'ثبت‌نام موفق' });
   } catch (err) {
+    console.error('ثبت‌نام ناموفق:', err.message);
     res.status(500).json({ error: err.message });
   }
 };
@@ -34,12 +31,12 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ error: 'کاربر پیدا نشد' });
+    if (!user) return res.status(401).json({ error: 'کاربر یافت نشد' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: 'رمز اشتباه' });
+    if (!isMatch) return res.status(401).json({ error: 'رمز اشتباه است' });
 
-    res.json({ message: 'ورود موفق', user: { name: user.name, email: user.email } });
+    res.json({ message: 'ورود موفق' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
