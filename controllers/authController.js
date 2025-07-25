@@ -3,58 +3,63 @@ const bcrypt = require('bcryptjs');
 const axios = require('axios');
 
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password } = req.body;
 
-  // ✅ بررسی فیلدهای خالی
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'همه فیلدها الزامی‌اند' });
-  }
+  // بررسی اینکه فیلدها پر شده باشند
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'لطفاً همه فیلدها را پر کنید' });
+  }
 
-  try {
-    // آیا کاربر قبلاً ثبت‌نام کرده؟
-    const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ error: 'کاربر با این ایمیل قبلاً ثبت‌نام کرده' });
-    }
+  try {
+    // بررسی تکراری نبودن ایمیل
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'ایمیل قبلاً استفاده شده است' });
+    }
 
-    const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashed });
+    // هش کردن رمز عبور و ذخیره کاربر
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashed });
 
-    // ارسال ایمیل با EmailJS
-    await axios.post('https://api.emailjs.com/api/v1.0/email/send', {
-      service_id: 'service_k2787c8',
-      template_id: 'template_eyrr8ou',
-      user_id: 'HxrJTFWRj9Hsyez-fytAw',
-      template_params: {
-        to_name: name,
-        to_email: email,
-        message: `سلام ${name}، ثبت‌نام شما با موفقیت انجام شد.`,
-      },
-    });
+    // ارسال ایمیل با EmailJS
+    await axios.post('https://api.emailjs.com/api/v1.0/email/send', {
+      service_id: 'service_k2787c8',
+      template_id: 'template_eyrr8ou',
+      user_id: 'HxrJTFWRj9Hsyez-fytAw',
+      template_params: {
+        to_name: name,
+        to_email: email,
+        message: `سلام ${name}، ثبت‌نام شما با موفقیت انجام شد.`,
+      },
+    });
 
-    res.json({ message: 'ثبت‌نام موفق' });
-  } catch (err) {
-    console.error('ثبت‌نام ناموفق:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+    res.json({ message: 'ثبت‌نام با موفقیت انجام شد' });
+  } catch (err) {
+    console.error('خطا در ثبت‌نام:', err.message);
+    res.status(500).json({ error: 'خطای سرور: ' + err.message });
+  }
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'ایمیل و رمز عبور الزامی‌اند' });
-  }
+  // بررسی اینکه فیلدها پر شده باشند
+  if (!email || !password) {
+    return res.status(400).json({ error: 'ایمیل و رمز عبور الزامی هستند' });
+  }
 
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ error: 'کاربر یافت نشد' });
+  try {
+    // پیدا کردن کاربر
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ error: 'کاربر یافت نشد' });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: 'رمز اشتباه است' });
+    // بررسی تطابق رمز
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'رمز عبور اشتباه است' });
 
-    res.json({ message: 'ورود موفق' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    res.json({ message: 'ورود با موفقیت انجام شد' });
+  } catch (err) {
+    console.error('خطا در ورود:', err.message);
+    res.status(500).json({ error: 'خطای سرور: ' + err.message });
+  }
 };
