@@ -1,8 +1,7 @@
-const express = require("express");
-const router = express.Router();
-const { getProducts, addProduct } = require("../controllers/productController");
+// فایل products.js در مسیر اصلی پروژه
+const products = [
+  { id: 1, name: 'محصول اول', price: 100 },
+  { id: 2, name: 'محصول دوم', price: 200 }
+];
 
-router.get("/", getProducts);
-router.post("/", addProduct);
-
-module.exports = router;
+module.exports = products;
