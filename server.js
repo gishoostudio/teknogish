@@ -14,9 +14,12 @@ app.use(express.static('public'));
 const authRoutes = require('./routes/auth');
 app.use('/auth', authRoutes);
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error(err));
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
