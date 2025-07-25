@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const productController = require('../productController');
+const productController = require('../controllers/productController');
 
 // مسیر افزودن محصول
 router.post('/add', productController.addProduct);
