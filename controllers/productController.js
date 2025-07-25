@@ -1,31 +1,35 @@
-const Product = require('./products');
+const products = require('../products'); // مسیر درست
 
-// افزودن محصول
-exports.addProduct = async (req, res) => {
-  try {
-    const product = await Product.create(req.body);
-    res.status(201).json({ message: 'محصول با موفقیت اضافه شد', product });
-  } catch (error) {
-    res.status(500).json({ error: 'خطا در افزودن محصول' });
-  }
+// نمایش همه محصولات
+exports.getAllProducts = (req, res) => {
+  res.json(products);
 };
 
-// دریافت همه محصولات
-exports.getAllProducts = async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: 'خطا در دریافت محصولات' });
+// افزودن محصول جدید (برای سادگی به آرایه اضافه می‌کنیم)
+exports.addProduct = (req, res) => {
+  const { name, price } = req.body;
+  if (!name || !price) {
+    return res.status(400).json({ error: 'نام و قیمت الزامی هستند' });
   }
+
+  const newProduct = {
+    id: products.length + 1,
+    name,
+    price,
+  };
+
+  products.push(newProduct);
+  res.status(201).json({ message: 'محصول اضافه شد', product: newProduct });
 };
 
-// حذف محصول با آیدی
-exports.deleteProduct = async (req, res) => {
-  try {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: 'محصول حذف شد' });
-  } catch (error) {
-    res.status(500).json({ error: 'خطا در حذف محصول' });
+// حذف محصول
+exports.deleteProduct = (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = products.findIndex((p) => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'محصول یافت نشد' });
   }
+
+  const deleted = products.splice(index, 1);
+  res.json({ message: 'محصول حذف شد', deleted });
 };
