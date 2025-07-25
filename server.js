@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const path = require('path');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth');
+const productRoutes = require('./routes/Product');
+app.use('/products', productRoutes);
 
 dotenv.config();
 const app = express();
