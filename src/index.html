@@ -1,93 +1,93 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>ورود و ثبت‌نام teknogish</title>
+  <meta charset="UTF-8">
+  <title>ورود | تکنوگیش</title>
   <style>
-    body { font-family: sans-serif; direction: rtl; background: #f5f5f5; display: flex; flex-direction: column; align-items: center; padding-top: 50px; }
-    .box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 300px; }
-    .box h2 { text-align: center; }
-    input, button { width: 100%; margin-bottom: 10px; padding: 8px; border-radius: 4px; }
-    button { background: #2ecc71; color: white; border: none; font-weight: bold; cursor: pointer; }
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    form {
+      background: #fff;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+      text-align: center;
+    }
+    input, button {
+      margin: 10px 0;
+      padding: 10px;
+      width: 90%;
+      font-size: 1em;
+    }
   </style>
 </head>
 <body>
 
-  <div class="box">
-    <h2>ثبت‌نام</h2>
-    <form id="registerForm">
-      <input type="text" name="name" placeholder="نام" required />
-      <input type="email" name="email" placeholder="ایمیل" required />
-      <input type="password" name="password" placeholder="رمز عبور" required />
-      <button type="submit">ارسال کد تأیید</button>
-    </form>
-    <form id="verifyForm" style="display:none;">
-      <input type="text" name="otp" placeholder="کد تأیید" required />
-      <button type="submit">تأیید کد</button>
-    </form>
-  </div>
+<h2>ورود یا ثبت‌نام</h2>
+<form id="authForm">
+  <input type="email" id="email" placeholder="ایمیل شما" required><br>
+  <button type="button" onclick="requestOTP()">ارسال کد تایید</button>
+  <input type="text" id="otp" placeholder="کد تایید را وارد کنید" required>
+  <button type="submit">ورود</button>
+</form>
 
-  <div class="box">
-    <h2>ورود</h2>
-    <form id="loginForm">
-      <input type="email" name="email" placeholder="ایمیل" required />
-      <input type="password" name="password" placeholder="رمز عبور" required />
-      <button type="submit">ورود</button>
-    </form>
-  </div>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  emailjs.init("HxrJTFWRj9Hsyez-fytAw"); // کلید عمومی EmailJS
 
-  <script>
-    const registerForm = document.getElementById('registerForm');
-    const verifyForm = document.getElementById('verifyForm');
-    let tempData = {};
+  let generatedCode = null;
 
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = registerForm.name.value;
-      const email = registerForm.email.value;
-      const password = registerForm.password.value;
-      tempData = { name, email, password };
+  function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
 
-      const res = await fetch('/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(tempData),
-      });
-      const data = await res.json();
-      alert(data.message || data.error);
-      if (data.message) {
-        registerForm.style.display = 'none';
-        verifyForm.style.display = 'block';
-      }
+  function requestOTP() {
+    const email = document.getElementById("email").value;
+    if (!email) return alert("لطفا ایمیل را وارد کنید");
+
+    generatedCode = generateOTP();
+
+    emailjs.send("service_k2787c8", "template_eyrr8ou", {
+      to_email: email,
+      otp_code: generatedCode
+    }).then(() => {
+      alert("کد تایید به ایمیل شما ارسال شد.");
+    }).catch(() => {
+      alert("خطا در ارسال ایمیل");
+    });
+  }
+
+  document.getElementById("authForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const otp = document.getElementById("otp").value;
+
+    if (otp !== generatedCode) {
+      return alert("کد تایید نادرست است!");
+    }
+
+    const response = await fetch("/api/auth/login-or-register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
     });
 
-    verifyForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const otp = verifyForm.otp.value;
-      const res = await fetch('/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...tempData, otp }),
-      });
-      const data = await res.json();
-      alert(data.message || data.error);
-    });
-
-    const loginForm = document.getElementById('loginForm');
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = loginForm.email.value;
-      const password = loginForm.password.value;
-
-      const res = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      alert(data.message || data.error);
-    });
-  </script>
+    const data = await response.json();
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      window.location.href = "/dashboard.html";
+    } else {
+      alert("خطا در ورود یا ثبت‌نام");
+    }
+  });
+</script>
 
 </body>
 </html>
