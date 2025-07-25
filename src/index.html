@@ -26,21 +26,17 @@
       margin-bottom: 20px;
       text-align: center;
     }
-    input {
+    input, button {
       width: 100%;
       margin-bottom: 10px;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      width: 100%;
-      background: #2ecc71;
-      color: white;
-      border: none;
       padding: 10px;
       border-radius: 4px;
-      font-weight: bold;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: green;
+      color: white;
+      border: none;
       cursor: pointer;
     }
   </style>
@@ -50,7 +46,7 @@
   <div class="box">
     <h2>ثبت‌نام</h2>
     <form id="registerForm">
-      <input type="text" name="name" placeholder="نام" required />
+      <input name="name" placeholder="نام" required />
       <input type="email" name="email" placeholder="ایمیل" required />
       <input type="password" name="password" placeholder="رمز عبور" required />
       <button type="submit">ثبت‌نام</button>
@@ -67,48 +63,39 @@
   </div>
 
   <script>
-    // ثبت‌نام
-    const registerForm = document.getElementById('registerForm');
-    registerForm.addEventListener('submit', async (e) => {
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = registerForm.name.value;
-      const email = registerForm.email.value;
-      const password = registerForm.password.value;
-
+      const body = {
+        name: e.target.name.value,
+        email: e.target.email.value,
+        password: e.target.password.value
+      };
       const res = await fetch('/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify(body)
       });
-
       const data = await res.json();
       alert(data.message || data.error);
-
-      // اگر موفق بود، به صفحه بعد برو
-      if (res.ok) {
-        window.location.href = "/dashboard.html"; // یا صفحه دلخواه
-      }
     });
 
-    // ورود
-    const loginForm = document.getElementById('loginForm');
-    loginForm.addEventListener('submit', async (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = loginForm.email.value;
-      const password = loginForm.password.value;
-
+      const body = {
+        email: e.target.email.value,
+        password: e.target.password.value
+      };
       const res = await fetch('/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify(body)
       });
-
       const data = await res.json();
-      alert(data.message || data.error);
-
-      // اگر ورود موفق بود، برو به صفحه بعد
-      if (res.ok) {
-        window.location.href = "/dashboard.html"; // یا هر صفحه دیگر
+      if (res.ok && data.token) {
+        localStorage.setItem('token', data.token);
+        window.location.href = '/src/dashboard.html';
+      } else {
+        alert(data.error || 'ورود ناموفق');
       }
     });
   </script>
