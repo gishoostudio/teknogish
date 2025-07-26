@@ -1,5 +1,5 @@
 
-const emailjs = require('@emailjs/nodejs');
+const emailjs = require('@emailjs/browser');
 
 const otpStore = {}; // In-memory store (move to DB in production)
 
