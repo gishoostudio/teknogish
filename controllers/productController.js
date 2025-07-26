@@ -1,12 +1,10 @@
-const products = require('../products'); // مسیر درست
+import products from '../products.js'; // فرض بر اینه که `products.js` وجود داره و default export داره
 
-// نمایش همه محصولات
-exports.getAllProducts = (req, res) => {
+export const getAllProducts = (req, res) => {
   res.json(products);
 };
 
-// افزودن محصول جدید (برای سادگی به آرایه اضافه می‌کنیم)
-exports.addProduct = (req, res) => {
+export const addProduct = (req, res) => {
   const { name, price } = req.body;
   if (!name || !price) {
     return res.status(400).json({ error: 'نام و قیمت الزامی هستند' });
@@ -22,8 +20,7 @@ exports.addProduct = (req, res) => {
   res.status(201).json({ message: 'محصول اضافه شد', product: newProduct });
 };
 
-// حذف محصول
-exports.deleteProduct = (req, res) => {
+export const deleteProduct = (req, res) => {
   const id = parseInt(req.params.id);
   const index = products.findIndex((p) => p.id === id);
   if (index === -1) {
