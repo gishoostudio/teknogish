@@ -1,45 +1,52 @@
-import User from '../models/User.js';
-import jwt from 'jsonwebtoken';
-// ⚠️ اگر EmailJS رو از سمت کلاینت استفاده می‌کنی، خط زیر رو حذف کن:
-// import emailjs from '@emailjs/nodejs';
 
-const OTP_STORE = new Map();
+const emailjs = require('@emailjs/nodejs');
 
-export const register = async (req, res) => {
-  const { name, email, password } = req.body;
-  const existing = await User.findOne({ email });
-  if (existing) return res.status(400).json({ error: 'ایمیل قبلاً استفاده شده است' });
+const otpStore = {}; // In-memory store (move to DB in production)
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  OTP_STORE.set(email, { otp, expires: Date.now() + 5 * 60 * 1000 }); // 5 دقیقه
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-  // اگر ارسال از کلاینت باشه، این بخش نیاز نیست:
-  // await emailjs.send(...)
-
-  res.json({ message: 'کد تأیید تولید شد (ارسال از سمت کاربر انجام شود)', otp });
-};
-
-export const verify = async (req, res) => {
-  const { name, email, password, otp } = req.body;
-  const record = OTP_STORE.get(email);
-
-  if (!record || record.otp !== otp || record.expires < Date.now()) {
-    return res.status(400).json({ error: 'کد تأیید نامعتبر یا منقضی شده' });
+const sendOTP = async (toEmail, otpCode) => {
+  try {
+    const response = await emailjs.send(
+      'service_k2787c8',
+      'template_eyrr8ou',
+      {
+        email: toEmail,
+        otp: otpCode,
+      },
+      {
+        publicKey: 'HxrJTFWRj9Hsyez-fytAw'
+      }
+    );
+    console.log('OTP sent:', response.status);
+    return true;
+  } catch (err) {
+    console.error('EmailJS Error:', err);
+    return false;
   }
-
-  const user = new User({ name, email, password });
-  await user.save();
-  OTP_STORE.delete(email);
-
-  res.json({ message: 'ثبت‌نام با موفقیت انجام شد' });
 };
 
-export const login = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user || user.password !== password)
-    return res.status(400).json({ error: 'ایمیل یا رمز نادرست است' });
+exports.sendOtp = async (req, res) => {
+  const { email } = req.body;
+  const otp = generateOTP();
+  otpStore[email] = {
+    code: otp,
+    expiresAt: Date.now() + 5 * 60 * 1000 // 5 min
+  };
+  const sent = await sendOTP(email, otp);
+  if (sent) {
+    res.status(200).json({ message: 'کد تایید ارسال شد' });
+  } else {
+    res.status(500).json({ message: 'ارسال کد تایید با خطا مواجه شد' });
+  }
+};
 
-  const token = jwt.sign({ id: user._id }, 'secret123', { expiresIn: '1d' });
-  res.json({ message: 'ورود موفقیت‌آمیز بود', token });
+exports.verifyOtp = (req, res) => {
+  const { email, otp } = req.body;
+  const record = otpStore[email];
+  if (!record) return res.status(400).json({ message: 'کدی ارسال نشده' });
+  if (Date.now() > record.expiresAt) return res.status(400).json({ message: 'کد منقضی شده' });
+  if (record.code !== otp) return res.status(400).json({ message: 'کد نادرست است' });
+  delete otpStore[email];
+  res.status(200).json({ message: 'کد تأیید شد' });
 };
