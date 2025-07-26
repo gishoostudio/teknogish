@@ -1,14 +1,14 @@
-const express = require('express');
+import express from 'express';
+import {
+  addProduct,
+  getAllProducts,
+  deleteProduct
+} from '../controllers/productController.js';
+
 const router = express.Router();
-const productController = require('../controllers/productController');
 
-// مسیر افزودن محصول
-router.post('/add', productController.addProduct);
+router.post('/add', addProduct);
+router.get('/', getAllProducts);
+router.delete('/:id', deleteProduct);
 
-// نمایش همه محصولات
-router.get('/', productController.getAllProducts);
-
-// حذف محصول با آیدی
-router.delete('/:id', productController.deleteProduct);
-
-module.exports = router;
+export default router;
