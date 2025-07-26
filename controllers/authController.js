@@ -1,10 +1,11 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const emailjs = require('@emailjs/nodejs');
+import User from '../models/User.js';
+import jwt from 'jsonwebtoken';
+// ⚠️ اگر EmailJS رو از سمت کلاینت استفاده می‌کنی، خط زیر رو حذف کن:
+// import emailjs from '@emailjs/nodejs';
 
 const OTP_STORE = new Map();
 
-exports.register = async (req, res) => {
+export const register = async (req, res) => {
   const { name, email, password } = req.body;
   const existing = await User.findOne({ email });
   if (existing) return res.status(400).json({ error: 'ایمیل قبلاً استفاده شده است' });
@@ -12,23 +13,13 @@ exports.register = async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   OTP_STORE.set(email, { otp, expires: Date.now() + 5 * 60 * 1000 }); // 5 دقیقه
 
-  try {
-    await emailjs.send('service_k2787c8', 'template_eyrr8ou', {
-      to_email: email,
-      user_name: name,
-      message: `کد تأیید شما: ${otp}`,
-    }, {
-      publicKey: 'HxrJTFWRj9Hsyez-fytAw',
-    });
+  // اگر ارسال از کلاینت باشه، این بخش نیاز نیست:
+  // await emailjs.send(...)
 
-    res.json({ message: 'کد تأیید ارسال شد' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'ارسال ایمیل با خطا مواجه شد' });
-  }
+  res.json({ message: 'کد تأیید تولید شد (ارسال از سمت کاربر انجام شود)', otp });
 };
 
-exports.verify = async (req, res) => {
+export const verify = async (req, res) => {
   const { name, email, password, otp } = req.body;
   const record = OTP_STORE.get(email);
 
@@ -43,7 +34,7 @@ exports.verify = async (req, res) => {
   res.json({ message: 'ثبت‌نام با موفقیت انجام شد' });
 };
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user || user.password !== password)
