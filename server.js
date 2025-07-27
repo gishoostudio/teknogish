@@ -1,43 +1,21 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import path from 'path';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth.js';
-import productRoutes from './routes/Product.js';
-import { fileURLToPath } from 'url';
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+require('dotenv').config();
 
-dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('public'));
 
-// برای __dirname در ESModule
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const authRoutes = require('./routes/auth');
+app.use('/auth', authRoutes);
 
-// اتصال به MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
-}).then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB error:', err));
+}).then(() => console.log('MongoDB connected'))
+  .catch(err => console.log('DB Error:', err.message));
 
-// میانی‌ها
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// فایل‌های استاتیک از مسیر src
-app.use('/src', express.static(path.join(__dirname, 'src')));
-
-// نمایش index.html در مسیر root
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'src', 'index.html'));
-});
-
-// مسیرهای API
-app.use('/auth', authRoutes);
-app.use('/api/products', productRoutes);
-
-// اجرای سرور
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-});
+app.listen(3000, () => console.log('Server running on port 3000'));
